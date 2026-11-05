@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coffeebreak Mail</title>
+<meta name="description" content="Coffeebreak Mail: a bold pink email desk with Coffeebreak Drive, music, movies, a VR lounge, a hotspot helper and lots of real tools.">
+<meta name="theme-color" content="#ff2e93">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CB Mail">
+<link rel="stylesheet" href="style.css">
+</head><body data-theme="bubblegum">
+<header class="top"><img src="assets/logo-sm.jpg" alt="Coffeebreak logo"><h1>Coffeebreak Mail<small>Bold, pink and packed with real tools</small></h1><div id="who"></div></header>
+<nav class="tabs" id="tabs">
+<button data-v="mail" class="on">Mail</button><button data-v="drive">Drive</button><button data-v="hotspot">Hotspot Helper</button><button data-v="tools">Toolbox</button><button data-v="music">Music</button><button data-v="movies">Movies</button><button data-v="vr">VR Lounge</button><button data-v="signup">Account</button><button data-v="settings">Settings</button><button id="installBtn" class="hide">Install app</button>
+</nav>
+<main>
+<!-- SIGN UP -->
+<section class="view" id="v-signup">
+ <div class="hero"><h2>Coffeebreak Mail</h2>
+  <div class="big">Your own bold pink mail desk. One price, every pro feature included. No sign-up needed.</div>
+  <span class="count" id="toolCount">0</span><div class="big">real, working tools inside, counted live from the app</div>
+  <div><span class="pill">Inbox and folders</span><span class="pill">Coffeebreak Drive</span><span class="pill">Hotspot Helper</span><span class="pill">Karen's songs</span><span class="pill">Movie corner</span><span class="pill">VR lounge</span></div></div>
+ <div class="plans">
+  <div class="plan" id="planAll"><div class="pill">ALL INCLUDED</div><div class="price">One price</div><b>Coffeebreak Mail, every pro feature included</b>
+   <ul><li>Inbox: write, read, reply, folders, search, labels, stars, drafts and templates</li><li>Coffeebreak Drive with 10 GB</li><li>Hotspot Helper</li><li>The Toolbox</li><li>Music player with Karen's Coffeebreak songs</li><li>Movie corner</li><li>VR lounge</li><li>All 6 themes and every sticker</li></ul>
+   <p class="muted">Nothing extra to buy, no upgrades and no locked features.</p></div>
+ </div>
+ <div class="card hide" id="acctCard"><h2>Your account</h2><div id="acctInfo"></div>
+  <div id="proBox"></div>
+ </div>
+ <div class="card" id="joinCard"><h2>Add another person on this device</h2><p class="muted">Optional. Handy when someone else shares this device and wants their own inbox.</p>
+  <div class="row"><div><label for="suName">Your name</label><input id="suName" placeholder="First name"></div>
+  <div><label for="suUser">Choose your Coffeebreak handle</label><input id="suUser" placeholder="e.g. sunnyday"></div>
+  <div><label for="suContact">Your contact email (so Karen can reach you)</label><input id="suContact" placeholder="you@example.com"></div></div>
+  <button id="suGo">Add account</button><span id="suMsg" class="muted"></span>
+  <button class="ghost" id="suSwitch">Switch account</button>
+ </div>
+ <div class="card"><h3>Good to know</h3>
+  <div class="note"><b>Coming soon:</b> sending to outside email addresses. That needs Coffeebreak's own domain and a sending service, which are being set up. For now, mail is delivered between Coffeebreak Mail accounts on the same device and everything else waits safely in Sent.</div>
+  <div class="note"><b>About storage:</b> Coffeebreak Drive keeps files in this browser on your device. Every account gets 10 GB, and your device also needs that much free space.</div>
+ </div>
+</section>
+
+<!-- MAIL -->
+<section class="view on" id="v-mail"><div id="mailLock"></div>
+ <div id="mailApp" class="hide">
+ <div class="card noprint"><div class="row" style="align-items:end"><div style="flex:3"><label for="q">Search mail</label><input id="q" placeholder="Search from, subject or words"></div>
+  <div><label for="sortSel">Sort</label><select id="sortSel"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="subj">Subject A to Z</option></select></div>
+  </div>
+  <div class="sendrecv"><button id="composeBtn" class="bigbtn send">✉️ Send<small>Write and send an email</small></button><button id="receiveBtn" class="bigbtn recv">📥 Receive<small>Check for new mail</small></button></div>
+  <div id="recvMsg" class="recvmsg" role="status" aria-live="polite"></div>
+  <div class="note">Mail to Coffeebreak handles on this device arrives straight away.</div><div class="note" id="liveBox"></div></div>
+ <div class="mailwrap"><div class="card side" id="side"></div><div class="card list" id="list"></div><div class="card reader" id="reader"><p class="muted">Pick an email to read it.</p></div></div>
+ </div>
+</section>
+
+<!-- DRIVE -->
+<section class="view" id="v-drive"><div id="driveLock"></div>
+ <div id="driveApp" class="hide">
+ <div class="card"><h2>Coffeebreak Drive</h2>
+  <div class="quota"><div id="qbar"></div></div><p id="qtext" class="muted"></p><p id="devStore" class="muted"></p>
+  <div class="drop" id="drop">Drop any files here: photos, videos, songs, documents, zips and more<br><button id="pickBtn">Choose files</button><input type="file" id="fileIn" multiple class="hide"></div>
+  <div class="row" style="align-items:end"><div><label for="dq">Search files</label><input id="dq" placeholder="File name"></div>
+   <div><label for="dtype">Type</label><select id="dtype"><option value="">All types</option><option value="image">Photos</option><option value="video">Videos</option><option value="audio">Songs</option><option value="text">Text</option><option value="application">Documents and other</option></select></div>
+   <div><label for="dfolder">Folder</label><select id="dfolder"></select></div>
+   <div style="flex:0 0 auto"><button class="alt" id="newFolder">New folder</button></div></div>
+ </div>
+ <div class="grid" id="files"></div>
+ </div>
+</section>
+
+<!-- HOTSPOT -->
+<section class="view" id="v-hotspot">
+ <div class="card"><h2>Hotspot Helper</h2>
+ <div class="note"><b>Please note:</b> Coffeebreak Mail does not provide internet. These guides help you share your own phone's mobile data or find free public WiFi. Hotspot data comes out of your phone plan, so check your plan's data allowance and any extra charges with your provider.</div>
+ <div class="row">
+  <div class="card" id="hsIphone"><h3>iPhone personal hotspot</h3><ol class="steps">
+   <li>Open Settings.</li><li>Tap Personal Hotspot. On some iPhones it is under Settings, then Mobile Data, then Personal Hotspot.</li>
+   <li>Turn on Allow Others to Join.</li><li>Note the Wi-Fi Password shown on that screen. You can tap it to change it.</li>
+   <li>On your other device, open the WiFi list, pick your iPhone's name and type the password.</li>
+   <li>When you finish, turn Allow Others to Join off to save data and battery.</li></ol>
+   <p><a href="https://support.apple.com/en-au/111785" target="_blank" rel="noopener">Apple's official Personal Hotspot guide</a></p></div>
+  <div class="card" id="hsAndroid"><h3>Android hotspot</h3><ol class="steps">
+   <li>Open Settings.</li><li>Tap Network and internet, or Connections on Samsung phones.</li>
+   <li>Tap Hotspot and tethering, or Mobile Hotspot and Tethering on Samsung.</li>
+   <li>Tap WiFi hotspot or Mobile Hotspot and switch it on.</li>
+   <li>Tap the hotspot name to see or change the network name and password.</li>
+   <li>On your other device, join that network with the password. Switch the hotspot off when you finish.</li></ol>
+   <p class="muted">Menu names change a little between phone brands.</p>
+   <p><a href="https://support.google.com/android/answer/9059108" target="_blank" rel="noopener">Google's official Android hotspot guide</a></p></div>
+ </div>
+ <div class="card" id="hsTips"><h3>Tips to save data</h3><ul class="steps">
+  <li>Turn off automatic app updates and phone backups while on a hotspot.</li>
+  <li>Pause cloud photo syncing until you are back on home WiFi.</li>
+  <li>Set video streaming to standard or low quality.</li>
+  <li>Download songs, movies and big files at home or at the library before you go.</li>
+  <li>Close apps you are not using so they stop refreshing in the background.</li>
+  <li>On a laptop, mark the hotspot as a metered connection so it uses less data.</li>
+  <li>Check your data usage in your phone settings and reset the counter each billing month.</li>
+  <li>Use a strong hotspot password and turn the hotspot off when you finish.</li></ul>
+  <h3>Data calculator</h3><div class="row" style="align-items:end"><div><label for="hsGb">Data left in your plan (GB)</label><input id="hsGb" type="number" value="10" min="0" step="0.5"></div>
+  <div><label for="hsUse">What you will do</label><select id="hsUse"><option value="0.05">Email and web browsing (about 50 MB an hour)</option><option value="0.15">Music streaming (about 150 MB an hour)</option><option value="0.7">Standard video (about 700 MB an hour)</option><option value="3">HD video (about 3 GB an hour)</option><option value="1">Video calls (about 1 GB an hour)</option></select></div>
+  <div style="flex:0 0 auto"><button id="hsCalc">Work it out</button></div></div><p id="hsOut" style="font-size:18px"></p>
+  <p class="muted">These are rough averages. Real use depends on the app and quality settings.</p></div>
+ <div class="card" id="hsWifi"><h3>Find free public WiFi</h3><ul class="steps">
+  <li><a href="https://newcastlelibraries.com.au" target="_blank" rel="noopener">Newcastle Libraries</a>: free WiFi and computers at library branches.</li>
+  <li><a href="https://www.sl.nsw.gov.au/public-library-services" target="_blank" rel="noopener">State Library of NSW public library services</a>: find NSW public libraries near you.</li>
+  <li><a href="https://www.nsla.org.au" target="_blank" rel="noopener">National and State Libraries Australia</a>: links to every state library.</li>
+  <li><a href="https://www.wifimap.io" target="_blank" rel="noopener">WiFi Map</a>: a map of public WiFi spots shared by users.</li>
+  <li>Many council centres, shopping centres, cafes and transport hubs have free WiFi. Ask staff for the network name.</li></ul>
+  <div class="note"><b>Stay safe on public WiFi:</b> avoid banking or payments on open networks, check the network name with staff, and forget the network when you leave.</div></div>
+ </div>
+</section>
+
+<!-- TOOLS -->
+<section class="view" id="v-tools"><div class="card"><h2>Toolbox</h2><p><b id="toolCount2"></b> real tools, all working in your browser.</p>
+ <div class="row"><div><label for="tq">Find a tool</label><input id="tq" placeholder="Type a tool name"></div><div><label for="tcat">Group</label><select id="tcat"><option value="">All groups</option></select></div></div></div>
+ <div class="card hide" id="runner"><h3 id="rName"></h3><p class="muted" id="rDesc"></p>
+  <label for="rIn">Your text</label><textarea id="rIn"></textarea>
+  <div id="rParamBox"><label for="rParam" id="rParamLbl"></label><input id="rParam"></div>
+  <button id="rRun">Run tool</button><button class="alt" id="rCopy">Copy result</button><button class="ghost" id="rMail">Use in an email</button><button class="ghost" id="rClose">Close</button>
+  <label for="rOut">Result</label><textarea id="rOut" readonly></textarea></div>
+ <div id="toolGrid"></div>
+</section>
+
+<!-- MUSIC -->
+<section class="view" id="v-music"><div id="musicLock"></div><div id="musicApp" class="hide">
+ <div class="card"><h2>Coffeebreak Music</h2><p class="muted">Songs by Karen from Coffeebreak, made with Suno.</p>
+  <canvas id="viz" width="900" height="120"></canvas>
+  <h3 id="nowT">Pick a song</h3><audio id="audio" preload="none" controls style="width:100%"></audio>
+  <div><button id="mPrev">Previous</button><button id="mPlay">Play</button><button id="mNext">Next</button><button class="alt" id="mShuf">Shuffle off</button><button class="alt" id="mRep">Repeat off</button>
+  <label for="mVol" style="display:inline">Volume</label> <input id="mVol" type="range" min="0" max="1" step="0.05" value="0.8" style="width:160px;display:inline-block"></div></div>
+ <div class="card"><h3>Playlist</h3><div class="tracks" id="tracks"></div><button class="ghost" id="mDrive">Add my songs from Drive</button></div>
+</div></section>
+
+<!-- MOVIES -->
+<section class="view" id="v-movies"><div id="moviesLock"></div><div id="moviesApp" class="hide">
+ <div class="card"><h2>Movie corner</h2><h3 id="movT">Pick a movie</h3><video id="movie" preload="none" controls playsinline></video>
+  <div><label for="movSpeed" style="display:inline">Speed</label> <select id="movSpeed" style="width:auto"><option>0.5</option><option>0.75</option><option selected>1</option><option>1.25</option><option>1.5</option><option>2</option></select>
+  <button id="movPip">Picture in picture</button><button id="movFull">Full screen</button><button class="ghost" id="movDrive">Add my videos from Drive</button></div></div>
+ <div class="posters" id="posters"></div>
+</div></section>
+
+<!-- VR -->
+<section class="view" id="v-vr"><div id="vrLock"></div><div id="vrApp" class="hide">
+ <div class="card"><h2>VR Lounge</h2><p class="muted" id="vrNote">Drag to look around. Use the wheel or pinch to move closer.</p>
+  <div id="vrbox"></div>
+  <button id="vrEnter">Enter VR</button><button class="alt" id="vrSong">Play a song in the lounge</button><button class="alt" id="vrScreen">Change the big screen</button><button class="ghost" id="vrSpin">Auto spin on</button></div>
+</div></section>
+
+<!-- SETTINGS -->
+<section class="view" id="v-settings">
+ <div class="card" id="profileCard"><h2>Your name and address</h2><p class="muted">Your free account was made for you on this device. Change your name and Coffeebreak handle any time.</p><div class="row"><div><label for="pfName">Your name</label><input id="pfName"></div><div><label for="pfUser">Your Coffeebreak handle</label><input id="pfUser"></div><div><label for="pfContact">Contact email (optional, so Karen can reach you)</label><input id="pfContact" placeholder="you@example.com"></div></div><button id="pfSave">Save my details</button></div>
+ <div class="card"><h2>Themes</h2><div id="themes"></div><label><input type="checkbox" id="bigText" style="width:auto"> Bigger text</label></div>
+ <div class="row">
+ <div class="card"><h3>Signatures</h3><div id="sigList"></div><label for="sigName">Name</label><input id="sigName"><label for="sigText">Signature</label><textarea id="sigText"></textarea><button id="sigAdd">Save signature</button></div>
+ <div class="card"><h3>Templates</h3><div id="tplList"></div><label for="tplName">Name</label><input id="tplName"><label for="tplSubj">Subject</label><input id="tplSubj"><label for="tplBody">Body</label><textarea id="tplBody"></textarea><button id="tplAdd">Save template</button></div>
+ </div><div class="row">
+ <div class="card"><h3>Labels</h3><div id="labList"></div><div class="row"><input id="labName" placeholder="Label name"><input id="labColor" type="color" value="#ff2e93" style="flex:0 0 70px;height:46px"></div><button id="labAdd">Add label</button></div>
+ <div class="card"><h3>Folders</h3><div id="folList"></div><input id="folName" placeholder="Folder name"><button id="folAdd">Add folder</button></div>
+ <div class="card"><h3>Contacts</h3><div id="conList"></div><input id="conName" placeholder="Name"><input id="conEmail" placeholder="Email or Coffeebreak handle"><button id="conAdd">Add contact</button></div>
+ </div><div class="row">
+ <div class="card"><h3>Notes pad</h3><textarea id="notes" placeholder="Notes save as you type"></textarea></div>
+ <div class="card"><h3>To-do list</h3><div class="row"><input id="todoIn" placeholder="New task"><button id="todoAdd" style="flex:0 0 auto">Add</button></div><div id="todoList"></div></div>
+ <div class="card"><h3>Backup</h3><p class="muted">Save your mail and settings to a file, or bring them back.</p><button id="expBtn">Export my mailbox</button><button class="alt" id="impBtn">Import a backup</button><input type="file" id="impIn" accept=".json,application/json" class="hide"></div>
+ </div>
+</section>
+
+</main>
+
+<div class="modal" id="composeM"><div class="card"><h2 id="cTitle">Write email</h2>
+ <label for="cTo">To (Coffeebreak handles or email addresses, comma separated)</label><input id="cTo" list="conDl"><datalist id="conDl"></datalist>
+ <label for="cCc">Cc</label><input id="cCc">
+ <label for="cSubj">Subject</label><input id="cSubj">
+ <div class="row"><div><label for="cTpl">Template</label><select id="cTpl"></select></div><div><label for="cSig">Signature</label><select id="cSig"></select></div><div><label for="cLab">Label</label><select id="cLab"></select></div></div>
+ <label for="cBody">Message</label><textarea id="cBody" style="min-height:180px"></textarea><div class="muted" id="cCount"></div>
+ <div class="stickers" id="stickers"></div>
+ <div id="cAtt" class="muted"></div><button class="ghost" id="cAttach">Attach from Drive</button><button class="ghost" id="cSpeak">Read aloud</button>
+ <div><button id="cSend">Send</button><button class="alt" id="cDraft">Save draft</button><button class="ghost" id="cClose">Close</button></div>
+</div></div>
+<div class="modal" id="genM"><div class="card"><div id="genBody"></div><button class="ghost" id="genClose">Close</button></div></div>
+<div id="toast"></div>
+
+<section class="bottom-links">
+ <a class="yt" href="https://www.youtube.com/channel/UCNuPovMUFJDrl9fhztDgy4w?sub_confirmation=1" target="_blank" rel="noopener">&#9654; Subscribe to Coffeebreak TV Series on YouTube</a>
+ <a class="sp" href="https://open.spotify.com/artist/05R0I9sslP9GnbSg6KzEr7" target="_blank" rel="noopener">🎵 Stream my music</a>
+</section>
+<footer class="legal"><div class="in">
+ <p><img src="assets/logo-sm.jpg" alt="Coffeebreak logo"><b>Coffeebreak Mail</b> by Coffeebreak. More apps, games and music at <a href="https://coffeebreaks.itch.io" target="_blank" rel="noopener">https://coffeebreaks.itch.io</a></p>
+ <p>About Coffeebreak: Coffeebreak is Karen, a songwriter and creator from Newcastle NSW. She makes apps, games, stores, tattoo flash and music under the Coffeebreak name.</p>
+ <p id="disclaimer">Disclaimer: Coffeebreak Mail is provided as is. Your mail, files and settings are stored in this browser on this device, so keep backups of anything important. Coffeebreak Mail does not provide internet access. Sending to outside email addresses is coming soon and is not live yet. One purchase includes every feature, with nothing extra to buy. Rights: &copy; Karen (Coffeebreak). Karen keeps all rights to her products, designs, apps, songs, videos, name and logo. Buyers may resell physical items they bought but may not copy them or make their own versions.</p>
+ <p id="tmclause">Third-party trademarks: Karen claims no ownership of any third-party brands or trademarks named here, including Tesla, Starlink, YouTube, Spotify, itch.io, Suno, Apple, iPhone, Google, Android, Samsung and WiFi Map, which belong to their owners and are named only for reference.</p>
+ <p class="links"><a href="https://www.tesla.com" target="_blank" rel="noopener">Tesla</a><a href="https://www.starlink.com" target="_blank" rel="noopener">Starlink</a></p>
+</div></footer>
+<script src="tools.js" defer></script>
+<script src="app.js" defer></script>
+</body></html>
