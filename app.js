@@ -1,3 +1,4 @@
+import { CBMailRoute, createLiveClient, LOCAL_NOTE_FOLDER } from './mail-routing.mjs';
 /* Coffeebreak Mail app */
 (function(){
 'use strict';
@@ -14,8 +15,9 @@ function def(){return{accounts:[],cur:null,mail:{},custom:[],labels:[{name:'Orde
  signatures:[{name:'Simple',text:'Warm regards,\n{name}\nSent with Coffeebreak Mail'},{name:'Coffeebreak fan',text:'Cheers,\n{name}\n☕ Coffeebreak Mail | https://coffeebreaks.itch.io'}],
  templates:[{name:'Thank you',subj:'Thank you',body:'Hi,\n\nThank you so much for your help. It really made my day.\n\n'},{name:'Order enquiry',subj:'Order enquiry',body:'Hello,\n\nI would like to ask about ordering. Could you please send prices, delivery times and the minimum order.\n\nThank you.\n'},{name:'Follow up',subj:'Following up',body:'Hi,\n\nI am just following up on my last email. Please let me know when you have a moment.\n\n'},{name:'Music pitch',subj:'New song for you to hear',body:'Hello,\n\nI have a new song I think you will enjoy. You can hear more at https://coffeebreaks.itch.io\n\n'},{name:'Complaint',subj:'Problem with my order',body:'Hello,\n\nI am writing about a problem with my order. Here are the details:\n\nCould you please help me sort this out.\n\n'}],
  contacts:[],notes:'',todos:[],settings:{theme:'bubblegum',big:false,sort:'new',spin:true},admin:{pin:null,register:[]},driveFolders:{}}}
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');return d?Object.assign(def(),d):def()}catch(e){return def()}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(!d)return def();let moved=false;if(d.mail)Object.keys(d.mail).forEach(k=>{const prev=d.mail[k]||[];const next=CBMailRoute.rehomeDeviceNotes(prev);if(next.some((m,i)=>m!==prev[i]))moved=true;d.mail[k]=next});const out=Object.assign(def(),d);if(moved)out.__rehome=true;return out}catch(e){return def()}}
 let S=load();
+if(S.__rehome){delete S.__rehome;save()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save. Your browser storage may be full.')}}
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',3800)}
 const me=()=>S.accounts.find(a=>a.id===S.cur)||null;
@@ -40,7 +42,7 @@ function lockHtml(kind){const a=me();
 function gate(id,needPro,kind){const ok=me()&&(!needPro||isPro());$('#'+id+'Lock').innerHTML=ok?'':lockHtml(kind);$('#'+id+'App').classList.toggle('hide',!ok);return ok}
 
 function render(){applyTheme();const a=me();
- $('#who').innerHTML=a?'<b>'+esc(a.name)+'</b>'+esc(a.user)+'@coffeebreak · '+'Every feature included':'';
+ $('#who').innerHTML=a?'<b>'+esc(a.name)+'</b> '+esc(a.user)+'@coffeebreak <span class="muted">On this device, not an internet address</span> · Every feature included':'';
  $('#toolCount').textContent=TOOLS.length;$('#toolCount2').textContent=TOOLS.length;
  if(view==='signup')renderSignup();
  if(view==='mail'&&gate('mail',false,'Mail'))renderMail();
@@ -55,7 +57,7 @@ function render(){applyTheme();const a=me();
 /* ---------- SIGN UP ---------- */
 function renderSignup(){const a=me();$('#acctCard').classList.toggle('hide',!a);
  if(!a)return;
- $('#acctInfo').innerHTML='<p style="font-size:20px">Hi '+esc(a.name)+'. Your Coffeebreak handle is <b>'+esc(a.user)+'@coffeebreak</b>.</p><p>Plan: <span class="status active">Every feature included</span></p><p class="muted">Your full email address on Coffeebreak\'s own domain arrives when outside sending goes live.</p><button class="ghost" id="logout">Change my name or handle</button>';
+ $('#acctInfo').innerHTML='<p style="font-size:20px">Hi '+esc(a.name)+'. Your handle on this device is <b>'+esc(a.user)+'@coffeebreak</b>. That is not an internet address.</p><p>Plan: <span class="status active">Every feature included</span></p><p class="muted">Outside mail uses a separate Coffeebreak Mail address after you sign in on the Mail screen.</p><button class="ghost" id="logout">Change my name or handle</button>';
  let h='<h3>Every feature is included</h3><p>Your one purchase covers it all: 10 GB Drive, the VR lounge, Karen\'s songs, the movie corner, every theme and every sticker. There is nothing extra to buy.</p>';
  $('#proBox').innerHTML=h;
  $('#logout').onclick=()=>go('settings');
@@ -67,17 +69,13 @@ $('#suGo').onclick=()=>{const name=$('#suName').value.trim(),user=$('#suUser').v
  const a={id:uid(),name,user,contact,created:Date.now(),pro:'none',ref:null};S.accounts.push(a);S.cur=a.id;seed(a);save();msg('');render();toast('Welcome to Coffeebreak Mail, '+name);
  function msg(t){$('#suMsg').textContent=' '+t;return false}};
 $('#suSwitch').onclick=()=>{if(!S.accounts.length)return toast('No accounts on this device yet.');gen('<h2>Switch account</h2>'+S.accounts.map(a=>'<button data-id="'+a.id+'">'+esc(a.name)+' ('+esc(a.user)+')</button>').join(''));$('#genBody').onclick=e=>{const b=e.target.closest('button[data-id]');if(b){S.cur=b.dataset.id;save();closeGen();render()}}};
-function seed(a){const b=S.mail[a.user]=S.mail[a.user]||[];const t=Date.now();const k='karen@coffeebreak';
- [['Welcome to Coffeebreak Mail','Hi '+a.name+',\n\nWelcome to Coffeebreak Mail. Your handle is '+a.user+'@coffeebreak. There was nothing to sign up for. You can set your name and handle any time in Settings.\n\nWrite emails, sort them into folders, add labels and stickers, and keep files in Coffeebreak Drive.\n\nMail between Coffeebreak handles on this device works straight away. To send to and receive from Gmail, Outlook and others, link your free Coffeebreak Mail address on the Mail screen.\n\nKaren, Coffeebreak','Important'],
-  ['Your Toolbox tour','There are '+TOOLS.length+' real tools in the Toolbox, from GST and invoice makers to fun bubble letters. Open the Toolbox tab to try them.','Ideas'],
-  ['Meet Coffeebreak Drive','Drop any file into Coffeebreak Drive: photos, videos, songs, documents and zips. Every account gets 10 GB.',''],
-  ['Need internet on the go','The Hotspot Helper shows how to share your phone\'s data and where to find free public WiFi. Coffeebreak Mail does not provide internet itself.',''],
-  ['Music, movies and the VR lounge','Karen\'s songs, the movie corner and the VR lounge are all included. Open the Music, Movies and VR Lounge tabs.','Music']].forEach((m,i)=>b.push({id:uid(),from:k,fromName:'Karen at Coffeebreak',to:a.user+'@coffeebreak',subject:m[0],body:m[1],date:t-i*60000,folder:'Inbox',read:false,starred:i===0,labels:m[2]?[m[2]]:[],att:[]}))}
-function deliverSystem(a,subj,body){(S.mail[a.user]=S.mail[a.user]||[]).push({id:uid(),from:'karen@coffeebreak',fromName:'Karen at Coffeebreak',to:a.user+'@coffeebreak',subject:subj,body,date:Date.now(),folder:'Inbox',read:false,starred:false,labels:['Important'],att:[]});save()}
+function seed(a){const b=S.mail[a.user]=S.mail[a.user]||[];const t=Date.now();
+ CBMailRoute.localNotes(a.name,a.user).forEach((m,i)=>b.push({id:uid(),from:'note@this-device',fromName:'Note on this device',to:a.user+'@coffeebreak',subject:m.subject,body:m.body,date:t-i*60000,folder:m.folder,read:false,starred:false,labels:[],att:[],onDevice:true}))}
+function deliverSystem(a,subj,body){(S.mail[a.user]=S.mail[a.user]||[]).push({id:uid(),from:'note@this-device',fromName:'Note on this device',to:a.user+'@coffeebreak',subject:subj,body,date:Date.now(),folder:LOCAL_NOTE_FOLDER,read:false,starred:false,labels:[],att:[],onDevice:true});save()}
 
 /* ---------- MAIL ---------- */
 let folder='Inbox',labelF=null,selId=null,q='';
-const FOLDERS=['Inbox','Starred','Sent','Drafts','Archive','Trash'];
+const FOLDERS=['Inbox','Starred','Sent','Drafts','Archive',LOCAL_NOTE_FOLDER,'Trash'];
 function allFolders(){return FOLDERS.concat(S.custom)}
 function msgs(){let m=box();
  if(labelF)m=m.filter(x=>x.labels.includes(labelF)&&x.folder!=='Trash');
@@ -92,7 +90,7 @@ function renderMail(){const b=box();
  renderReader();}
 function renderReader(){const x=box().find(m=>m.id===selId);const r=$('#reader');
  if(!x){r.innerHTML='<p class="muted">Pick an email to read it.</p>';return}
- r.innerHTML='<h2 style="font-size:22px">'+esc(x.subject||'(no subject)')+'</h2><div class="muted">From: '+esc(x.fromName?x.fromName+' <'+x.from+'>':x.from)+'<br>To: '+esc(x.to)+(x.cc?'<br>Cc: '+esc(x.cc):'')+'<br>'+new Date(x.date).toLocaleString('en-AU')+(x.folder==='Sent'&&x.outside?'<br><b>Outside addresses wait in Sent until sending goes live.</b>':'')+'</div><div class="body">'+esc(x.body)+'</div>'+(x.att&&x.att.length?'<div>Attachments: '+x.att.map(t=>'<button class="ghost" data-att="'+t.id+'">📎 '+esc(t.name)+'</button>').join('')+'</div>':'')+
+ r.innerHTML='<h2 style="font-size:22px">'+esc(x.subject||'(no subject)')+'</h2><div class="muted">From: '+esc(x.fromName?x.fromName+' <'+x.from+'>':x.from)+'<br>To: '+esc(x.to)+(x.cc?'<br>Cc: '+esc(x.cc):'')+'<br>'+new Date(x.date).toLocaleString('en-AU')+(x.folder==='Sent'&&x.outside?(x.serverAccepted?'<br>The mail service accepted this. That is not the same as it arriving.':(x.notSent?'<br>Not sent. Saved on this device only.':'<br>Outside mail was handed to the mail service from this device.')):'')+(x.onDevice&&!(x.folder==='Sent'&&x.outside)?'<br>On this device. Not sent over the internet.':'')+'</div><div class="body">'+esc(x.body)+'</div>'+(x.att&&x.att.length?'<div>Attachments: '+x.att.map(t=>'<button class="ghost" data-att="'+t.id+'">📎 '+esc(t.name)+'</button>').join('')+'</div>':'')+
  '<div class="noprint"><button data-a="reply">Reply</button><button data-a="fwd">Forward</button>'+(x.folder==='Drafts'?'<button data-a="edit">Edit draft</button>':'')+'<button class="alt" data-a="star">'+(x.starred?'Unstar':'Star')+'</button><button class="alt" data-a="unread">Mark unread</button><button class="alt" data-a="archive">Archive</button>'+(x.folder==='Trash'?'<button class="alt" data-a="restore">Restore</button><button class="ghost" data-a="purge">Delete forever</button>':'<button class="ghost" data-a="del">Delete</button>')+'<button class="ghost" data-a="print">Print</button><button class="ghost" data-a="speak">Read aloud</button>'+
  '<div class="row"><div><label for="moveSel">Move to</label><select id="moveSel"><option value="">Choose folder</option>'+allFolders().filter(f=>f!=='Starred').map(f=>'<option>'+esc(f)+'</option>').join('')+'</select></div><div><label for="labSel">Add or remove label</label><select id="labSel"><option value="">Choose label</option>'+S.labels.map(l=>'<option>'+esc(l.name)+'</option>').join('')+'</select></div></div></div>';}
 $('#side').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id==='emptyTrash'){const a=me();S.mail[a.user]=box().filter(x=>x.folder!=='Trash');save();selId=null;renderMail();return toast('Trash emptied')}if(b.dataset.f){folder=b.dataset.f;labelF=null}if(b.dataset.l){labelF=b.dataset.l}selId=null;renderMail()});
@@ -119,31 +117,42 @@ $('#reader').addEventListener('change',e=>{const x=box().find(m=>m.id===selId);i
 $('#q').addEventListener('input',e=>{q=e.target.value.trim();renderMail()});
 $('#sortSel').addEventListener('change',e=>{S.settings.sort=e.target.value;save();renderMail()});
 $('#composeBtn').onclick=()=>compose({});
-function receive(){const a0=me();if(!a0)return;const fresh=load();fresh.cur=S.cur;const was=new Set(box().map(m=>m.id));S=fresh;const a=me()||a0;
- const since=a.lastCheck||0;const inb=box().filter(m=>m.folder==='Inbox'&&m.from!==a.user+'@coffeebreak');
- const n=inb.filter(m=>!was.has(m.id)||(m.date>since&&!m.read&&since)).length;a.lastCheck=Date.now();save();
- folder='Inbox';labelF=null;q='';$('#q').value='';renderMail();
- const unread=inb.filter(m=>!m.read).length;
- const t=n?n+' new email'+(n>1?'s':'')+' in your Inbox':'No new mail right now. '+(unread?unread+' unread in your Inbox.':'You are all caught up.');
- $('#recvMsg').textContent=t;toast(t);clearTimeout(receive.t);receive.t=setTimeout(()=>$('#recvMsg').textContent='',9000);return n}
-/* ---------- OUTSIDE MAIL (linked Coffeebreak Mail address online) ---------- */
-const LIVE='https://cbmail-live.'+'coffee'+'breaks.workers.dev/api';
+async function receive(){
+ if(!liveTok()){const t=CBMailRoute.describeReceive({signedIn:false});$('#recvMsg').textContent=t;toast(t);return 0}
+ return pullLive(true)}
+const live=createLiveClient({onUnauthorized(){S.settings.liveTok='';S.settings.liveAddr='';save();renderLive()}});
 const liveTok=()=>S.settings.liveTok||'';
-async function liveApi(path,opt={}){let r;try{r=await fetch(LIVE+path,{method:opt.method||'GET',headers:{'content-type':'application/json',...(liveTok()?{authorization:'Bearer '+liveTok()}:{})},body:opt.body?JSON.stringify(opt.body):undefined})}catch(e){throw new Error('Could not reach Coffeebreak Mail online. Check your internet.')}let j={};try{j=await r.json()}catch(e){}if(r.status===401&&path!=='/login'){S.settings.liveTok='';S.settings.liveAddr='';save();renderLive()}if(!r.ok&&!j.results)throw new Error(j.error||'Coffeebreak Mail online did not answer.');return j}
 function renderLive(){const el=$('#liveBox');if(!el)return;
- if(liveTok()){el.innerHTML='<b>Outside mail is on.</b> Mail from Gmail, Outlook and others to <b>'+esc(S.settings.liveAddr||'')+'</b> arrives here when you tap Receive, and emails you send to outside addresses go out from it. <button class="ghost" id="liveOff">Unlink</button>';$('#liveOff').onclick=()=>{S.settings.liveTok='';S.settings.liveAddr='';save();renderLive()}}
- else{el.innerHTML='<b>Get mail from Gmail, Outlook and others:</b> link your free Coffeebreak Mail address.<div class="row" style="align-items:end"><div><label for="liveH">Handle</label><input id="liveH" autocomplete="username" placeholder="yourname"></div><div><label for="liveP">Password</label><input id="liveP" type="password" autocomplete="current-password"></div><div><button id="liveGo">Link</button></div></div><div id="liveMsg" class="muted"></div>';
-  $('#liveGo').onclick=async()=>{const m=$('#liveMsg'),b=$('#liveGo');b.disabled=true;m.textContent='One moment';try{const j=await liveApi('/login',{method:'POST',body:{handle:$('#liveH').value,password:$('#liveP').value}});S.settings.liveTok=j.token;S.settings.liveAddr=j.address;save();renderLive();pullLive(true)}catch(e){m.textContent=e.message}finally{b.disabled=false}}}}
-async function pullLive(show){if(!liveTok()||!me())return 0;try{const j=await liveApi('/mail?since=0');const seen=new Set(S.settings.liveSeen||[]);let n=0;
- (j.mail||[]).filter(m=>m.folder==='Inbox'&&!seen.has(m.id)).forEach(m=>{seen.add(m.id);box().push({id:uid(),liveId:m.id,from:m.from||'',fromName:m.fromName||'',to:m.to||'',cc:m.cc||'',subject:m.subject||'(no subject)',body:m.body||'',date:Date.parse(m.date)||m.received||Date.now(),folder:'Inbox',read:false,starred:false,labels:[],att:[],outside:true});n++});
+ if(liveTok()){el.innerHTML='<p id="liveStatus"></p><button class="ghost" id="liveOff" type="button">Sign out of outside mail</button>';
+  $('#liveOff').onclick=()=>{S.settings.liveTok='';S.settings.liveAddr='';save();renderLive()}}
+ else{el.innerHTML='<p id="liveStatus"></p><div class="row" style="align-items:end"><div><label for="liveN">Name</label><input id="liveN" autocomplete="name"></div><div><label for="liveH">Handle</label><input id="liveH" autocomplete="username" placeholder="yourname"></div><div><label for="liveP">Password</label><input id="liveP" type="password" autocomplete="current-password"></div></div><div><button id="liveNew" type="button">Create address</button> <button id="liveGo" type="button">Sign in</button></div><div id="liveMsg" class="muted"></div>';
+  $('#liveNew').onclick=()=>liveAuth('signup');$('#liveGo').onclick=()=>liveAuth('login')}
+ loadLiveStatus()}
+async function loadLiveStatus(){let status=null;try{status=await live.status()}catch(e){status=null}
+ const el=$('#liveStatus');if(el)el.textContent=CBMailRoute.describeLiveStatus(status,liveTok()?{address:S.settings.liveAddr}:null)}
+async function liveAuth(mode){const m=$('#liveMsg'),b=$(mode==='signup'?'#liveNew':'#liveGo');
+ const handle=$('#liveH').value.trim(),password=$('#liveP').value,name=($('#liveN').value||'').trim();
+ if(mode==='signup'&&!name){m.textContent='Add your name.';return}
+ if(!b)return;
+ b.disabled=true;m.textContent='One moment';
+ try{const j=mode==='signup'?await live.signup({handle,name,password}):await live.login({handle,password});
+  if(!j.token||!j.address)throw new Error('Coffeebreak Mail did not sign you in.');
+  S.settings.liveTok=j.token;S.settings.liveAddr=j.address;save();renderLive();pullLive(true)}
+ catch(e){m.textContent=e.message}finally{b.disabled=false}}
+async function pullLive(show){if(!liveTok()||!me())return 0;try{const j=await live.pull(liveTok(),0);const seen=new Set(S.settings.liveSeen||[]);const have=new Set(box().map(m=>m.liveId).filter(Boolean));let n=0;
+ (j.mail||[]).filter(m=>m.folder==='Inbox'&&!seen.has(m.id)&&!have.has(m.id)).forEach(m=>{seen.add(m.id);box().push({id:uid(),liveId:m.id,from:m.from||'',fromName:m.fromName||'',to:m.to||'',cc:m.cc||'',subject:m.subject||'(no subject)',body:m.body||'',date:Date.parse(m.date)||m.received||Date.now(),folder:'Inbox',read:false,starred:false,labels:[],att:[],outside:true});n++});
  S.settings.liveSeen=[...seen].slice(-2000);save();if(n&&view==='mail')renderMail();
- if(show||n){const t=n?n+' new outside email'+(n>1?'s':'')+' in your Inbox':'No new outside mail right now.';$('#recvMsg').textContent=t;toast(t)}return n}catch(e){if(show)$('#recvMsg').textContent=e.message;return 0}}
-async function sendLive(outs,m,sent){try{const j=await liveApi('/send',{method:'POST',body:{to:outs.join(', '),subject:m.subject,text:m.body}});const ok=(j.results||[]).filter(r=>r.ok).length;
- if(sent){sent.outside=!ok;sent.results=j.results;save()}toast(ok?'Sent to '+ok+' outside address'+(ok>1?'es':''):'Not sent: '+(((j.results||[])[0]||{}).error||'please try again'))}catch(e){toast(e.message)}}
+ if(show||n){const t=CBMailRoute.describeReceive({signedIn:true,count:n});$('#recvMsg').textContent=t;toast(t)}return n}catch(e){if(show){const t=CBMailRoute.describeReceive({signedIn:!!liveTok(),error:e.message});$('#recvMsg').textContent=t;toast(t)}return 0}}
+async function sendLive(outs,m,sent,localCount){try{const j=await live.send(liveTok(),{to:outs.join(', '),cc:m.cc||'',subject:m.subject,text:m.body});const accepted=(j.results||[]).filter(r=>r.ok).length;
+ const error=((j.results||[]).find(r=>!r.ok)||{}).error||'';
+ const waiting=j.outsideState==='waiting';
+ if(sent){sent.outside=true;sent.serverAccepted=waiting?0:accepted;sent.notSent=waiting||!accepted;sent.results=j.results;save();if(view==='mail')renderMail()}
+ toast(CBMailRoute.describeSend({localCount:localCount||0,outsideCount:outs.length,signedIn:true,accepted,error,waiting}))}
+ catch(e){if(sent){sent.notSent=true;sent.serverAccepted=0;save();if(view==='mail')renderMail()}toast(CBMailRoute.describeSend({localCount:localCount||0,outsideCount:outs.length,signedIn:true,error:e.message}))}}
 setInterval(()=>{if(liveTok()&&view==='mail'&&!document.hidden)pullLive(false)},120000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&liveTok())pullLive(false)});
-$('#receiveBtn').onclick=()=>{const b=$('#receiveBtn');b.disabled=true;$('#recvMsg').textContent='Checking for new mail';setTimeout(async()=>{receive();if(liveTok())await pullLive(true);b.disabled=false},350)};
-addEventListener('storage',e=>{if(e.key===KEY&&view==='mail'){const a=me();if(!a)return;const fresh=load();const cnt=((fresh.mail[a.user]||[]).length)-box().length;if(cnt>0)$('#recvMsg').textContent='New mail is waiting. Tap Receive to see it.'}});
+$('#receiveBtn').onclick=async()=>{const b=$('#receiveBtn');b.disabled=true;$('#recvMsg').textContent='Checking the mail service';try{await receive()}finally{b.disabled=false}};
+addEventListener('storage',e=>{if(e.key===KEY&&view==='mail')$('#recvMsg').textContent='Another tab changed mail on this device. That is not new outside mail.'});
 function speak(t){if(!('speechSynthesis'in window))return toast('Read aloud is not available in this browser.');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-AU';speechSynthesis.speak(u)}
 
 /* ---------- COMPOSE ---------- */
@@ -168,16 +177,17 @@ $('#cAttach').onclick=async()=>{const fs=await dbAll();if(!fs.length)return toas
 function readMsg(){return{to:$('#cTo').value.trim(),cc:$('#cCc').value.trim(),subject:$('#cSubj').value.trim(),body:$('#cBody').value,label:$('#cLab').value}}
 $('#cDraft').onclick=()=>{const m=readMsg(),a=me();let x=cState.draftId&&box().find(z=>z.id===cState.draftId);if(!x){x={id:uid(),from:a.user+'@coffeebreak',fromName:a.name,folder:'Drafts',read:true,starred:false,labels:[],att:[]};box().push(x);cState.draftId=x.id}
  Object.assign(x,{to:m.to,cc:m.cc,subject:m.subject,body:m.body,date:Date.now(),att:cState.att,labels:m.label?[m.label]:x.labels,sticker:cState.sticker});save();toast('Draft saved');if(view==='mail')renderMail()};
-$('#cSend').onclick=()=>{const m=readMsg(),a=me();const rc=(m.to+','+m.cc).split(/[,;]/).map(s=>s.trim().toLowerCase()).filter(Boolean);
- if(!rc.length)return toast('Add who the email is to.');
- const bad=rc.filter(r=>!/^[a-z0-9._-]{3,20}(@coffeebreak)?$/.test(r)&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r));if(bad.length)return toast('Check this address: '+bad[0]);
- let local=0,outside=0,outs=[];
- rc.forEach(r=>{const h=r.replace(/@coffeebreak$/,'');const acc=!r.includes('@')||r.endsWith('@coffeebreak')?S.accounts.find(z=>z.user===h):null;
-  if(acc){(S.mail[acc.user]=S.mail[acc.user]||[]).push({id:uid(),from:a.user+'@coffeebreak',fromName:a.name,to:m.to,cc:m.cc,subject:m.subject,body:m.body,date:Date.now(),folder:'Inbox',read:false,starred:false,labels:[],att:cState.att,sticker:cState.sticker});local++}else{outside++;outs.push(r)}});
+$('#cSend').onclick=()=>{const m=readMsg(),a=me();const plan=CBMailRoute.planRecipients(m.to+','+m.cc,S.accounts.map(x=>x.user));
+ if(plan.invalid.length)return toast(plan.invalid[0].reason);
+ if(!plan.local.length&&!plan.outside.length)return toast('Add who the email is to.');
+ plan.local.forEach(r=>{const acc=S.accounts.find(z=>z.user===r.handle);if(!acc)return;
+  (S.mail[acc.user]=S.mail[acc.user]||[]).push({id:uid(),from:a.user+'@coffeebreak',fromName:a.name,to:m.to,cc:m.cc,subject:m.subject,body:m.body,date:Date.now(),folder:'Inbox',read:false,starred:false,labels:[],att:cState.att,sticker:cState.sticker,onDevice:true})});
  if(cState.draftId){S.mail[a.user]=box().filter(z=>z.id!==cState.draftId)}
- box().push({id:uid(),from:a.user+'@coffeebreak',fromName:a.name,to:m.to,cc:m.cc,subject:m.subject,body:m.body,date:Date.now(),folder:'Sent',read:true,starred:false,labels:m.label?[m.label]:[],att:cState.att,sticker:cState.sticker,outside:outside>0});
- save();$('#composeM').classList.remove('on');
- toast(local?'Delivered to '+local+' Coffeebreak Mail account'+(local>1?'s':'')+(outside&&!liveTok()?'. Link your Coffeebreak Mail address on the Mail screen to send to outside addresses.':''):(liveTok()?'Sending':'Saved in Sent. Link your Coffeebreak Mail address on the Mail screen to send to outside addresses.'));if(view==='mail')renderMail();if(outs.length&&liveTok())sendLive(outs,m,box()[box().length-1])};
+ const sent={id:uid(),from:a.user+'@coffeebreak',fromName:a.name,to:m.to,cc:m.cc,subject:m.subject,body:m.body,date:Date.now(),folder:'Sent',read:true,starred:false,labels:m.label?[m.label]:[],att:cState.att,sticker:cState.sticker,outside:plan.outside.length>0,onDevice:true,notSent:plan.outside.length>0&&!liveTok()};
+ box().push(sent);save();$('#composeM').classList.remove('on');
+ if(view==='mail')renderMail();
+ if(plan.outside.length&&liveTok())sendLive(plan.outside.map(x=>x.address),m,sent,plan.local.length);
+ else toast(CBMailRoute.describeSend({localCount:plan.local.length,outsideCount:plan.outside.length,signedIn:false}))};
 
 /* ---------- DRIVE (IndexedDB) ---------- */
 let DB=null;
@@ -342,7 +352,7 @@ $('#pfSave').onclick=async()=>{const a=me();const name=$('#pfName').value.trim()
  if(contact&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contact))return toast('That contact email does not look right.');
  const old=a.user;if(user!==old){S.mail[user]=(S.mail[old]||[]).map(m=>{if(m.from===old+'@coffeebreak')m.from=user+'@coffeebreak';if(m.to===old+'@coffeebreak')m.to=user+'@coffeebreak';return m});delete S.mail[old];if(S.driveFolders[old]){S.driveFolders[user]=S.driveFolders[old];delete S.driveFolders[old]}
   const fs=await dbAll();a.user=user;for(const f of fs){f.owner=user;await dbPut(f)}}
- a.name=name;a.user=user;a.contact=contact;a.auto=false;Object.values(S.mail).forEach(b=>b.forEach(m=>{if(m.from===user+'@coffeebreak')m.fromName=name}));save();render();toast('Saved. You are '+user+'@coffeebreak')};
+ a.name=name;a.user=user;a.contact=contact;a.auto=false;Object.values(S.mail).forEach(b=>b.forEach(m=>{if(m.from===user+'@coffeebreak')m.fromName=name}));save();render();toast('Saved. '+user+'@coffeebreak is your handle on this device, not an internet address')};
 
 /* ---------- ADMIN ---------- */
 let adminOk=false;
