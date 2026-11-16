@@ -1,7 +1,11 @@
-const V='cbmail-v7-honest';
-const SHELL=['./','index.html','style.css','tools.js','app.js','mail-routing.mjs','cbreport.js','manifest.webmanifest','assets/logo-sm.jpg','assets/baloo2.woff','icons/icon-192.png','icons/icon-512.png','icons/icon-180.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
-self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET'||new URL(r.url).origin!==location.origin)return;
- if(r.headers.has('range'))return; /* let media streaming go straight to the network */
- e.respondWith(caches.match(r,{ignoreSearch:true}).then(hit=>{const net=fetch(r).then(res=>{if(res.ok&&res.status===200){const cp=res.clone();caches.open(V).then(c=>c.put(r,cp))}return res}).catch(()=>hit||caches.match('index.html'));return hit||net}))});
+const V='cbmail-v8-redirect';
+self.addEventListener('install', e => { self.skipWaiting(); });
+self.addEventListener('activate', e => {
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+    await self.registration.unregister();
+    const clients = await self.clients.matchAll({ type: 'window' });
+    clients.forEach(c => { try { c.navigate(c.url); } catch (err) {} });
+  })());
+});
